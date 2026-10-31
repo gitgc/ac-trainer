@@ -64,6 +64,20 @@ def test_session_restart_drops_lap():
     assert all(s.gas == 1.0 for lap in valid for s in lap.samples)
 
 
+def test_timer_reset_before_lap_count():
+    # in the game the lap timer resets a frame or two before the lap counter goes up
+    laps = []
+    rec = LapRecorder(laps.append)
+    samples = stream(laps=3)
+    counted = [i for i in range(1, len(samples)) if samples[i].laps == samples[i - 1].laps + 1]
+    for i in counted[:-1]:   # the stream ends on the last crossing: leave that one as it is
+        samples[i].laps, samples[i].last_lap = samples[i - 1].laps, samples[i - 1].last_lap
+    for s in samples:
+        rec.feed(s)
+    assert [lap.valid for lap in laps] == [False, True, True, True]
+    assert [lap.time for lap in laps[1:]] == [50.0, 50.0, 50.0]
+    assert all(len(lap.samples) > 150 for lap in laps[1:])
+
 def test_spline_offset_is_learnt():
     laps = []
     rec = LapRecorder(laps.append)

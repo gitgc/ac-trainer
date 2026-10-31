@@ -48,6 +48,7 @@ class LapRecorder:
         self.current: Lap | None = None
         self.pos_offset = 0.0   # spline origin vs timing line, learnt at the first crossing
         self._offset_learnt = False
+        self._ended: Lap | None = None   # timer reset at the line, lap count not updated yet
 
     def feed(self, s: Sample) -> None:
         s.pos = (s.pos - self.pos_offset) % 1.0
@@ -56,10 +57,21 @@ class LapRecorder:
             self._start(s, at_line=s.lap_time < 1.0 and (s.pos < 0.02 or s.pos > 0.98))
             return
         prev = cur.samples[-1]
+        if self._ended is not None and s.lap_time > 2.0:
+            self._ended = None           # the lap was never counted: it was a restart
         if s.laps != prev.laps:
+            if s.laps == prev.laps + 1 and self._ended is not None:
+                ended, self._ended = self._ended, None
+                if not self._offset_learnt:
+                    self._learn_offset(s, ended)
+                ended.time = s.last_lap if s.last_lap > 0 else ended.samples[-1].lap_time
+                cur.number = s.laps + 1
+                cur.samples.append(s)
+                self._finish(ended)
+                return
             if s.laps == prev.laps + 1:
                 if not self._offset_learnt:
-                    self._learn_offset(s)
+                    self._learn_offset(s, cur)
                 cur.time = s.last_lap if s.last_lap > 0 else prev.lap_time
                 self._finish(cur)
                 self._start(s, at_line=True)
@@ -67,6 +79,10 @@ class LapRecorder:
                 self._start(s, at_line=s.lap_time < 1.0)
             return
         if s.lap_time + 0.5 < prev.lap_time:  # timer reset without a lap (restart, back to pits)
+            # ...or AC resetting the timer a frame before it counts the lap: keep the lap that
+            # just ended until the lap count catches up
+            at_line = s.lap_time < 1.0 and (prev.pos > 0.9 or prev.pos < 0.02)
+            self._ended = cur if at_line and cur.at_line else None
             self._start(s, at_line=s.lap_time < 1.0)
             return
         dp = s.pos - prev.pos
@@ -82,15 +98,14 @@ class LapRecorder:
             cur.invalidate("track limits")
         cur.samples.append(s)
 
-    def _learn_offset(self, s: Sample) -> None:
+    def _learn_offset(self, s: Sample, lap: Lap) -> None:
         self._offset_learnt = True
         p = s.pos
         if 0.02 < p < 0.98:
             # the AI spline doesn't start at the timing line on this track: rotate positions
             self.pos_offset = (self.pos_offset + p) % 1.0
             s.pos = 0.0
-            if self.current:
-                self.current.invalidate("spline offset learnt")
+            lap.invalidate("spline offset learnt")
 
     def _start(self, s: Sample, at_line: bool) -> None:
         self.current = Lap(number=s.laps + 1, samples=[s], at_line=at_line)
