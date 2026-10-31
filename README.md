@@ -194,3 +194,7 @@ Code map: `sources/` (shared memory, UDP, replay, simulator) → `laps.py` (lap 
 distance resampling) → `track.py` (corner detection) → `analysis.py` / `gears.py` (metrics
 and diagnosis) → `coach.py` (decisions and timing) → `speech.py` (voice).
 `rivals.py` + `csp_app/` handle other drivers; `storage.py` handles persistence.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
