@@ -42,11 +42,18 @@ class RivalsConfig:
 
 
 @dataclass
+class OverlayConfig:
+    enabled: bool = True     # braking markers / best line drawn in game by the ACTrainerLink app
+    file: str = ""           # default: Documents/Assetto Corsa/actrainer/overlay.json
+
+
+@dataclass
 class Config:
     telemetry: TelemetryConfig = field(default_factory=TelemetryConfig)
     voice: VoiceConfig = field(default_factory=VoiceConfig)
     coach: CoachConfig = field(default_factory=CoachConfig)
     rivals: RivalsConfig = field(default_factory=RivalsConfig)
+    overlay: OverlayConfig = field(default_factory=OverlayConfig)
     data_dir: str = "~/AssettoTrainer"
     record_sessions: bool = True
     # track id ("ks_brands_hatch/indy") -> {"1": "Paddock Hill", ...}
