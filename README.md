@@ -24,8 +24,10 @@ the Windows voices built into the PC, so there's no internet and no lag.
 
 ## Setup (on the PC that runs Assetto Corsa)
 
-1. Install **Python 3.11 or newer** from <https://www.python.org/downloads/>.
-   During setup, tick **"Add python.exe to PATH"**.
+1. Install **[uv](https://docs.astral.sh/uv/)**, which sets up Python for you: open a
+   terminal and run `winget install --id=astral-sh.uv -e`.
+   Alternatively, install **Python 3.11 or newer** from <https://www.python.org/downloads/>
+   and tick **"Add python.exe to PATH"** during setup.
 2. Get the code onto the PC, e.g. into `C:\ac-trainer`:
    `git clone https://github.com/gitgc/ac-trainer.git C:\ac-trainer`, or on GitHub use
    **Code → Download ZIP** and extract it. To update later, run `git pull` in that folder
@@ -186,8 +188,8 @@ real test.
 ## Development
 
 ```
-python -m venv .venv && .venv\Scripts\pip install -e .[dev]
-.venv\Scripts\python -m pytest
+uv sync
+uv run pytest
 ```
 
 Code map: `sources/` (shared memory, UDP, replay, simulator) → `laps.py` (lap splitting,

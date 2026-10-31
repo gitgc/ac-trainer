@@ -4,6 +4,14 @@ rem Extra arguments are passed through, e.g.:  run_coach.bat demo   /   run_coac
 setlocal
 cd /d "%~dp0"
 
+rem With uv installed, it fetches Python and the dependencies itself and keeps them in sync.
+where uv >nul 2>nul
+if not errorlevel 1 (
+    uv run --no-dev --quiet python -m actrainer %*
+    pause
+    exit /b
+)
+
 if not exist ".venv\Scripts\python.exe" (
     echo First run: setting up, this takes a minute...
     py -3 -m venv .venv 2>nul || python -m venv .venv
