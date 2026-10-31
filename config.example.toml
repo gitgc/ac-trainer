@@ -1,0 +1,40 @@
+# Copy this file to config.toml (next to run_coach.bat) and change what you need.
+# Everything is optional - delete any line to use the default.
+
+# Where your reference laps, optimum-lap library and session recordings are kept
+data_dir = "~/AssettoTrainer"
+record_sessions = true
+
+[voice]
+backend = "auto"        # auto | sapi (Windows voices) | say (macOS) | espeak | print (silent)
+voice = ""              # part of a voice name, e.g. "Zira" or "David" - see: run_coach.bat voices
+rate = 2                # -10 slow .. 10 fast. Slightly fast is easier to catch at speed
+volume = 100            # 0..100
+audio_device = ""       # part of an output device name, e.g. "Headphones" or "Arctis".
+                        # Empty = Windows default output
+
+[coach]
+verbosity = "normal"    # quiet: lap times + corner cues only | normal | chatty: also gains, ideal lap
+lead_time = 2.5         # a corner cue finishes this many seconds before the braking point
+max_focus = 2           # how many corners to work on at the same time
+corner_feedback = true  # one-word verdict straight after a corner you're working on
+explore_brake_points = true   # when nothing obvious is left, nudge braking points later
+lap_summary = true
+
+[rivals]
+enabled = true          # learn from other cars (needs the ACTrainerLink CSP app, see README)
+feed = ""               # default: Documents\Assetto Corsa\actrainer\rival_laps.jsonl
+any_model = false       # true = also compare with different cars (usually misleading)
+
+[telemetry]
+source = "shared_memory"   # shared_memory (same PC) | udp (coach on another computer)
+udp_host = "127.0.0.1"     # udp only: the PC running Assetto Corsa
+udp_port = 9996
+poll_hz = 60
+max_tyres_out = 2          # more wheels than this off track = lap invalid
+
+# Corners are found automatically and called "Turn 1", "Turn 2"... in the order you reach
+# them (they may not match the official numbering). Give them real names per track:
+# [corner_names."ks_brands_hatch/indy"]
+# 1 = "Paddock"
+# 2 = "Druids"
