@@ -137,9 +137,10 @@ which the coach rewrites after every lap:
 - **your best line**: per corner, the lap where you were fastest through it. Red = braking,
   white = coasting, green = throttle.
 
-It has three modes. **Focus corners** (the default) only shows the one or two corners the
-coach is working on, from just before the braking zone to the exit. **Full lap** shows the
-line for the next 350 m everywhere, with dimmer brake bars for every corner. **Off** hides it.
+It has three modes. **Full lap** (the default) shows the line for the next 350 m everywhere,
+with dimmer brake bars for every corner and the full markers for the corners the coach is
+working on. **Focus corners** only shows those one or two corners, from just before the
+braking zone to the exit. **Off** hides it.
 Switch modes with the button in the AC Trainer Link window, or assign a key there to cycle
 through them while driving. The choice is remembered.
 

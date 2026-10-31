@@ -122,7 +122,7 @@ local GAS_COLOR = rgbm(0.2, 1, 0.3, 0.85)
 local APEX_COLOR = rgbm(1, 0.85, 0.1, 0.8)
 local UP = vec3(0, 1, 0)
 
-local settings = ac.storage({ overlayMode = 2 })   -- index into MODES
+local settings = ac.storage({ overlayMode = 3 })   -- index into MODES
 local toggle = ac.ControlButton('ACTrainerLink/Cycle overlay')
 local overlay, overlayTime, overlayCheck = nil, -2, 0
 local overlayStatus = 'no overlay yet: drive a lap with the coach running'
