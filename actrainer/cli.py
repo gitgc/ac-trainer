@@ -16,11 +16,11 @@ RIVAL_POLL = 120   # samples between checks of the rival feed (~2 s)
 
 
 def _drive(source, info, cfg: Config, speech, store: Store, record: bool,
-           tip_listener=None, rivals=None) -> None:
+           tip_listener=None, rivals=None, overlay=None) -> None:
     writer = SessionWriter(cfg.data_path, info) if record else None
     if writer:
         print(f"[coach] recording to {writer.path}")
-    coach = Coach(info, cfg, speech, store, tip_listener=tip_listener)
+    coach = Coach(info, cfg, speech, store, tip_listener=tip_listener, overlay=overlay)
     coach.start()
     n = 0
     try:
@@ -62,6 +62,17 @@ def _rival_feed(cfg: Config, info):
     return RivalFeed(path, info, any_model=cfg.rivals.any_model)
 
 
+def _overlay(cfg: Config):
+    # the CSP app reads the file on the sim PC, so only when the coach runs there too
+    if not cfg.overlay.enabled or cfg.telemetry.source != "shared_memory":
+        return None
+    from pathlib import Path
+
+    from .overlay import OverlayWriter, default_overlay_path
+
+    return OverlayWriter(Path(cfg.overlay.file).expanduser() if cfg.overlay.file else default_overlay_path())
+
+
 def _speech(cfg: Config) -> SpeechManager:
     speech = SpeechManager(lambda: make_backend(cfg.voice))
     speech.start()
@@ -82,7 +93,7 @@ def run_live(cfg: Config) -> None:
                     waited += 1
                     time.sleep(1.0)
             _drive(source, info, cfg, speech, Store(cfg.data_path, info), cfg.record_sessions,
-                   rivals=_rival_feed(cfg, info))
+                   rivals=_rival_feed(cfg, info), overlay=_overlay(cfg))
     finally:
         speech.stop()
 

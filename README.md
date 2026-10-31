@@ -15,6 +15,8 @@ time is, corner by corner, while you drive.
   corners, and a corner cue interrupts small talk.
 - **Pushes you once you're consistent**: "Turn 1, try braking 5 meters later", then
   "Yes! 1 tenth quicker. Keep that marker." or "Too deep. Back to your old marker."
+- **Shows you where, too** (optional): the in-game CSP app paints the braking marker to aim
+  for on the track, plus your best line coloured by braking / coasting / throttle.
 - **Remembers everything.** Your best laps and the fastest rivals' laps are saved per car and
   track, so next time it starts from where you left off.
 
@@ -35,7 +37,8 @@ the Windows voices built into the PC, so there's no internet and no lag.
    [Your data carries over](#your-data-carries-over)), so updating never resets it.
 3. Double-click **`run_coach.bat`**. The first run installs what it needs (about a minute).
 4. *(Recommended)* Double-click **`install_csp_app.bat`** to install the in-game app that
-   records other cars' laps (see [Learning from faster drivers](#learning-from-faster-drivers)).
+   records other cars' laps (see [Learning from faster drivers](#learning-from-faster-drivers))
+   and draws the [on-track overlay](#on-track-overlay).
    If AC isn't in the default Steam folder, pass your install path:
    `install_csp_app.bat "D:\SteamLibrary\steamapps\common\assettocorsa"`
 5. **Headphones:** the coach speaks on the Windows default output. To pick a device
@@ -120,6 +123,29 @@ Online servers may not send other cars' pedal inputs. When they don't, the coach
 the speed trace alone, finding the braking point where the car starts slowing hard. Offline
 races against AI include full pedal data.
 
+## On-track overlay
+
+The same CSP app draws on the track itself, from `Documents\Assetto Corsa\actrainer\overlay.json`,
+which the coach rewrites after every lap:
+
+- a **red bar across the track** at the braking point to aim for, labelled (`T5 BRAKE`). It's
+  your best braking point for that corner, the rival's when the advice comes from a faster
+  driver (`T5 BRAKE (Marco)`), or the new marker while the coach is pushing you
+  (`T1 BRAKE +5 m`);
+- a **green bar** at the throttle point when the problem is coasting or a late throttle;
+- a **yellow dot** at the apex;
+- **your best line**: per corner, the lap where you were fastest through it. Red = braking,
+  white = coasting, green = throttle.
+
+It has three modes. **Focus corners** (the default) only shows the one or two corners the
+coach is working on, from just before the braking zone to the exit. **Full lap** shows the
+line for the next 350 m everywhere, with dimmer brake bars for every corner. **Off** hides it.
+Switch modes with the button in the AC Trainer Link window, or assign a key there to cycle
+through them while driving. The choice is remembered.
+
+The overlay needs the coach running on the same PC (it isn't written in `udp` mode). Set
+`overlay.enabled = false` in `config.toml` to stop writing it.
+
 ## Your data carries over
 
 Everything lives in `%USERPROFILE%\AssettoTrainer` (change it with `data_dir`):
@@ -176,13 +202,17 @@ and rev limit are estimated, and track-limit detection isn't available.
 - **No rival laps:** check that `Documents\Assetto Corsa\actrainer\rival_laps.jsonl`
   appears and grows during a race. If it doesn't, open the AC Trainer Link app once from the
   in-game apps bar; its window shows status and errors.
+- **No overlay:** it appears after your first lap with the coach running, and only for the
+  car and track it was written for. The AC Trainer Link window shows the overlay status; in
+  **focus corners** mode there's nothing to draw until the coach picks a corner to work on.
 
 ## Status
 
 The analysis, coaching, speech queue, rival feed and storage are covered by tests that run
 against a built-in vehicle simulator with known driving mistakes (`pytest`). The Assetto
-Corsa memory layouts and the CSP Lua calls come from the published structures and API, but
-have not yet been run against the live game. The first sessions on the real thing are the
+Corsa memory layouts and the CSP Lua calls come from the published structures and API (the
+Lua calls are checked against the SDK shipped with CSP 0.3.0-preview535, and the app runs
+against stubbed CSP functions), but have not yet been run against the live game. The first sessions on the real thing are the
 real test.
 
 ## Development

@@ -210,6 +210,14 @@ class SimSource:
                 env[i] = min(lim[i], math.sqrt(nxt * nxt + 2 * b * DS))
         self.env = env
 
+    def _build_layout(self) -> None:
+        """Centre line in world x/z, so a point of the lap is in the same place every lap."""
+        n = len(self.kappa)
+        heading = np.cumsum(self.kappa * self.dirn) * DS
+        x, z = np.cumsum(np.cos(heading)) * DS, np.cumsum(np.sin(heading)) * DS
+        f = np.arange(1, n + 1) / n   # the fictional layout doesn't quite close: spread the gap
+        self.line_x, self.line_z = x - f * x[-1], z - f * z[-1]
+
     # -- source interface ----------------------------------------------------------------
     def open(self) -> SessionInfo:
         self.t = 0.0
@@ -222,9 +230,8 @@ class SimSource:
         self.laps = 0
         self.lap_start = 0.0
         self.last_lap = 0.0
-        self.heading = 0.0
-        self.x = self.z = 0.0
         self._build_envelope()
+        self._build_layout()
         self._wall0 = time.monotonic()
         return SessionInfo(car="demo_gt", track="demo_ring", track_length=self.length,
                            rpm_limit=self.car.rpm_limit, driver="Demo Driver", source="sim")
@@ -294,9 +301,6 @@ class SimSource:
         step = self.v * dt
         self.d += step
         self.t += dt
-        self.heading += self.kappa[i] * self.dirn[i] * step
-        self.x += math.cos(self.heading) * step
-        self.z += math.sin(self.heading) * step
 
         lap_dist = self.d - self.length * self.laps
         if lap_dist >= self.length:
@@ -314,7 +318,7 @@ class SimSource:
             pos=(self.d % self.length) / self.length, speed=self.v * 3.6, gas=gas, brake=brake,
             clutch=1.0, gear=self.gear, rpm=rpm, steer=float(self.dirn[i] * min(1.0, self.kappa[i] * 20)),
             g_lat=float(self.dirn[i] * self.kappa[i] * self.v ** 2 / G), g_lon=a / G,
-            x=self.x, z=self.z, slip_fl=slip_f, slip_fr=slip_f, slip_rl=slip_r, slip_rr=slip_r,
+            x=float(self.line_x[i]), z=float(self.line_z[i]), slip_fl=slip_f, slip_fr=slip_f, slip_rl=slip_r, slip_rr=slip_r,
         )
 
     def _resistance(self, v: float, i: int) -> float:

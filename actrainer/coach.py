@@ -29,6 +29,7 @@ from .analysis import (Capability, CornerBest, CornerResult, Issue, RivalBest, a
 from .config import Config
 from .gears import ShiftAdvice, analyze_shifts
 from .laps import Lap, LapRecorder, Trace, build_trace
+from .overlay import OverlayWriter
 from .rivals import RivalLap
 from .sample import Sample, SessionInfo
 from .speech import CUE, FEEDBACK, INFO
@@ -91,9 +92,11 @@ def _compact(cols: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
 
 class Coach:
     def __init__(self, info: SessionInfo, cfg: Config, speech, store: Store,
-                 tip_listener: Callable | None = None, log: Callable[[str], None] = print):
+                 tip_listener: Callable | None = None, log: Callable[[str], None] = print,
+                 overlay: OverlayWriter | None = None):
         self.info, self.cfg, self.speech, self.store, self.log = info, cfg, speech, store, log
         self.tip_listener = tip_listener
+        self.overlay = overlay
         self.session_id = time.strftime("%Y%m%d%H%M%S")
         self.names = cfg.corner_names.get(info.track_id) or cfg.corner_names.get(info.track) or {}
         self.meta = store.load_meta()
@@ -178,6 +181,7 @@ class Coach:
             if self.optimum_lap and self.optimum_lap < self.ref_time - 0.1:
                 text += f" Optimum lap {phrases.lap_time(self.optimum_lap)}."
             self.speech.say(text, INFO, key="hello", ttl=30)
+            self._update_overlay()
         else:
             self.speech.say(f"Coach ready. New track for the {car}. Drive a clean lap so I can learn it.",
                             INFO, key="hello", ttl=30)
@@ -298,9 +302,11 @@ class Coach:
                 text = "Too deep. Back to your old marker."
                 self.focus.pop(c.index, None)
                 self.explored[c.index] = self.lap_no
+                self._update_overlay()
             elif gain < -0.02:
                 text = f"Yes! {phrases.amount(gain)} quicker. Keep that marker."
                 f.base_bp, f.base_time, f.base_vmin, f.since_lap = m.brake_point, m.time, m.v_min, self.lap_no
+                self._update_overlay()
             else:
                 text = "Same time. Make it stick."
         elif f is not None and f.source == "rival" and c.index in self.rival_best:
@@ -439,10 +445,15 @@ class Coach:
             self._choose_focus(results, tr)
         if improved:
             self._save_library()
+        self._update_overlay()
 
         self.log(report.lap_report(self, lap, no, results, shifts, prev_ref))
         if self.cfg.coach.lap_summary:
             self._summary(lap, results, shifts, prev_ref, is_pb, first_model and self.model is not None)
+
+    def _update_overlay(self) -> None:
+        if self.overlay is not None:
+            self.overlay.write(self)
 
     def _estimate_length(self, lap: Lap) -> bool:
         t = np.array([s.t for s in lap.samples])
